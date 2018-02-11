@@ -1,0 +1,19 @@
+{
+  "name": "follow-gmusic",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "@jhanssen/options": "^1.0.4",
+    "castv2-client": "git+https://github.com/FNCxPro/node-castv2-client.git#promises",
+    "configstore": "^3.1.1",
+    "minimist": "^1.2.0",
+    "mqtt": "^2.15.2",
+    "playmusic": "^2.3.0"
+  }
+}
