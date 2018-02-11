@@ -8,8 +8,7 @@ const https = require("https");
 const os = require("os");
 const mdns = require("mdns");
 const Mp3Parser = require("@jhanssen/mp3parser");
-const CastClient = require("castv2-client").Client;
-const DefaultMediaReceiver = require("castv2-client").DefaultMediaReceiver;
+const { Client, DefaultMediaReceiver } = require("castv2-client");
 const { BufferReadStream } = require("./bufferstream");
 
 function findOffset(elapsedMS, stream) {
@@ -315,7 +314,7 @@ class Play {
         return new Promise((resolve, reject) => {
             castIP(this.cast).then(castAddr => {
                 //console.log(`will cast to ${castAddr} from ${serverAddr}`);
-                const castClient = new CastClient();
+                const castClient = new Client();
                 castClient.connect(castAddr).then(() => {
                     castClient.launch(DefaultMediaReceiver).then(player => {
                         this._cast = castClient;
