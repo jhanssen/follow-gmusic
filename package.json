@@ -9,11 +9,14 @@
   "author": "",
   "license": "MIT",
   "dependencies": {
+    "@jhanssen/mp3parser": "^1.0.1",
     "@jhanssen/options": "^1.0.4",
     "castv2-client": "git+https://github.com/FNCxPro/node-castv2-client.git#promises",
     "configstore": "^3.1.1",
+    "mdns": "^2.3.4",
     "minimist": "^1.2.0",
     "mqtt": "^2.15.2",
-    "playmusic": "^2.3.0"
+    "playmusic": "^2.3.0",
+    "request": "^2.83.0"
   }
 }

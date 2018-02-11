@@ -20,7 +20,10 @@ const updateDevices = require("./app/update-devices");
 const state = {
     pm: pm,
     conf: conf,
-    options: options
+    options: options,
+    playing: {},
+    presence: {},
+    casts: {}
 };
 
 function login()
