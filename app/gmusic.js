@@ -27,12 +27,18 @@ function findOffset(elapsedMS, stream) {
                 console.log("resuming at", seconds, header.stream_offset);
                 resolved = true;
                 resolve(header.stream_offset);
+                stream.unpipe(parser);
+                parser.removeAllListeners("streamHeader");
+                parser.removeAllListeners("streamEnd");
             }
             //console.log("header", header);
         });
         parser.on("streamEnd", () => {
             if (!resolved) {
                 reject("unable to find suitable offset");
+                stream.unpipe(parser);
+                parser.removeAllListeners("streamHeader");
+                parser.removeAllListeners("streamEnd");
             }
         });
         stream.pipe(parser);
