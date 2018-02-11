@@ -175,7 +175,7 @@ class Play {
         }
 
         const elapsed = Date.now() - this._started;
-        const started = this._started;
+        let started = this._started;
 
         this.stop();
 
@@ -187,6 +187,7 @@ class Play {
             const room = this.state.presence[this.uuid];
             console.log(`updating gmusic presence to ${room}`);
             if (!(room in this.state.casts)) {
+                started = undefined;
                 console.error(`no cast for room ${room}`);
                 return;
             }
@@ -195,7 +196,10 @@ class Play {
                 console.log(`connected to cast at ${this.cast}`);
                 this._playerSetup(started);
                 this._next();
+
+                started = undefined;
             }).catch(err => {
+                started = undefined;
                 console.error("error connecting to cast", err.message);
             });
         }).catch(err => {
@@ -300,6 +304,7 @@ class Play {
             } else if (status.playerState === "PLAYING") {
                 // playing, record the current timestamp
                 const now = started ? started : Date.now();
+                started = undefined;
                 this._started = now;
             }
             this._castState = status.playerState;
