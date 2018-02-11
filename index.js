@@ -74,7 +74,8 @@ function start()
         client.subscribe("follow/gmusic");
         client.subscribe("follow/presence");
         client.subscribe("follow/devices");
-        client.publish("follow/devices", '{"command": "request"}');
+        client.publish("follow/presence/command", '{"command": "request"}');
+        client.publish("follow/devices/command", '{"command": "request"}');
     });
     client.once("close", () => {
         console.log("mqtt closed");

@@ -86,6 +86,7 @@ class Play {
         this.status = State.Stopped;
         this.state = state;
         this._current = 0;
+        this._gstreamOffset = 0;
         this._castState = "";
         this._started = undefined;
     }
@@ -129,19 +130,7 @@ class Play {
                     this._server = server;
                     this._castConnect().then(() => {
                         console.log(`connected to cast at ${this.cast}`);
-
-                        this._player.on("status", status => {
-                            console.log("new state", status.playerState);
-                            if (this._castState === "PLAYING" && status.playerState === "IDLE") {
-                                ++this._current;
-                                this._next();
-                            } else if (status.playerState === "PLAYING") {
-                                // playing, record the current timestamp
-                                this._started = Date.now();
-                            }
-                            this._castState = status.playerState;
-                        });
-
+                        this._playerSetup();
                         this._next();
                     }).catch(err => {
                         console.error("error connecting to cast", err.message);
@@ -186,12 +175,14 @@ class Play {
         }
 
         const elapsed = Date.now() - this._started;
+        const started = this._started;
 
         this.stop();
 
         // figure out where to continue
         findOffset(elapsed, this._gstream.clone()).then(offset => {
-            this._gstream.setOffset(offset);
+            this._gstreamOffset = offset;
+            // this._gstream.setOffset(offset);
 
             const room = this.state.presence[this.uuid];
             console.log(`updating gmusic presence to ${room}`);
@@ -201,13 +192,8 @@ class Play {
             }
             this.cast = this.state.casts[room];
             this._castConnect().then(() => {
-                this._player.on("status", status => {
-                    if (status.playerState === "IDLE") {
-                        ++this._current;
-                        this._next();
-                    }
-                });
-
+                console.log(`connected to cast at ${this.cast}`);
+                this._playerSetup(started);
                 this._next();
             }).catch(err => {
                 console.error("error connecting to cast", err.message);
@@ -221,14 +207,17 @@ class Play {
         console.log("go next");
 
         if (!this._items) {
+            this._gstreamOffset = 0;
             console.error("missing items");
             return;
         }
         if (!this._server || !this._player) {
+            this._gstreamOffset = 0;
             console.error("missing server or cast");
             return;
         }
         if (this._current >= this._items.length) {
+            this._gstreamOffset = 0;
             console.error("at end");
             return;
         }
@@ -236,12 +225,17 @@ class Play {
         const item = this._items[this._current];
         this.state.pm.getStreamUrl(item.storeId, (err, url) => {
             if (err) {
+                this._gstreamOffset = 0;
                 console.error("unable to fetch stream url");
                 return;
             }
             console.log("got stream url");
 
             this._gstream = new BufferReadStream({ url: url });
+            if (this._gstreamOffset > 0) {
+                this._gstream.setOffset(this._gstreamOffset);
+                this._gstreamOffset = 0;
+            }
 
             const serverAddr = this._server.address();
             const media = {
@@ -294,6 +288,21 @@ class Play {
                 }
             }
             maybeResolve();
+        });
+    }
+
+    _playerSetup(started) {
+        this._player.on("status", status => {
+            console.log("player status change", status);
+            if (this._castState === "PLAYING" && status.playerState === "IDLE") {
+                ++this._current;
+                this._next();
+            } else if (status.playerState === "PLAYING") {
+                // playing, record the current timestamp
+                const now = started ? started : Date.now();
+                this._started = now;
+            }
+            this._castState = status.playerState;
         });
     }
 

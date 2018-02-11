@@ -1,5 +1,7 @@
 /*global process,module,require*/
 
+"use strict";
+
 const { Readable, Writable } = require("stream");
 const request = require("request");
 
@@ -41,6 +43,7 @@ class BufferReadStream extends Readable
 
         this._url = options.url;
         this._pendingRead = false;
+        this._pendingOffset = undefined;
         this._index = 0;
 
         if (options.clone)
@@ -60,14 +63,15 @@ class BufferReadStream extends Readable
     }
 
     clone() {
-        let buf = new BufferWriteStream({ url: this._url, clone: true });
+        let buf = new BufferReadStream({ url: this._url, clone: true });
         buf._write = this._write;
         buf._write._append(buf);
         return buf;
     }
 
     setOffset(offset) {
-        this._index = offset;
+        console.log("setting offset to", offset);
+        this._pendingOffset = offset;
         this._pendingRead = false;
     }
 
@@ -93,6 +97,20 @@ class BufferReadStream extends Readable
     _process() {
         if (!this._pendingRead)
             return;
+        if (this._pendingOffset) {
+            let bytes = 0;
+            for (let i = 0; i < this._write._chunks.length; ++i) {
+                bytes += this._write._chunks[i].length;
+                if (bytes > this._pendingOffset) {
+                    console.log(`using buffer ${i} for offset ${this._pendingOffset}`);
+                    this._pendingOffset = undefined;
+                    this._index = i;
+                    break;
+                }
+            }
+            if (this._pendingOffset)
+                return;
+        }
         while (!this._atEnd()) {
             const chunk = this._write._chunks[this._index++];
             if (!this.push(chunk)) {
