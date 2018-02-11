@@ -180,6 +180,11 @@ class Play {
     }
 
     updatePresence(presence) {
+        if (!this._started) {
+            console.log("presence updating, not started?");
+            return;
+        }
+
         const elapsed = Date.now() - this._started;
 
         this.stop();
