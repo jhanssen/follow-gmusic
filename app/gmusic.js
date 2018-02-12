@@ -291,8 +291,16 @@ class Play {
 
     _process(results) {
         return new Promise((resolve, reject) => {
+            let seen = new Set();
             let remaining = 0;
             let items = [];
+            const maybeAdd = (item) => {
+                const title = item.title.toLowerCase().replace(/\s+/g,' ');
+                if (!seen.has(title)) {
+                    items.push(item);
+                    seen.add(title);
+                }
+            };
             const maybeResolve = () => {
                 if (!remaining)
                     resolve(items);
@@ -301,14 +309,14 @@ class Play {
                 const item = results[i];
                 switch (item.type) {
                 case "1":
-                    items.push(item.track);
+                    maybeAdd(item.track);
                     break;
                 case "3":
                     ++remaining;
                     this.state.pm.getAlbum(item.album.albumId, true, (err, album) => {
                         if (album && !err) {
                             for (let i = 0; i < album.tracks.length; ++i) {
-                                items.push(album.tracks[i]);
+                                maybeAdd(album.tracks[i]);
                             }
                         }
                         process.nextTick(() => {
