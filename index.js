@@ -97,13 +97,11 @@ function start()
         case "follow/gmusic":
             if (!("command" in json))
                 return;
-            switch (json.command) {
-            case "play":
-                gmusic.play(json, state);
-                break;
-            case "stop":
-                gmusic.stop(json, state);
-                break;
+            if (json.command in gmusic) {
+                const func = gmusic[json.command];
+                if (typeof func === "function") {
+                    func.call(gmusic, json, state);
+                }
             }
             break;
         case "follow/presence":

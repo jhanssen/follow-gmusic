@@ -160,6 +160,41 @@ class Play {
         this._cleanup();
     }
 
+    next() {
+        if (!this._player) {
+            console.log("not playing");
+        }
+        if (this._current + 1 < this._items.length) {
+            ++this._current;
+            // to prevent our idle handler from playing the next next track
+            this._castState = "";
+            this._next();
+        } else {
+            console.log("at end");
+        }
+    }
+
+    previous() {
+        if (!this._player || !this._started) {
+            console.log("not playing");
+        }
+        const elapsed = Date.now() - this._started;
+        if (elapsed <= 5000) {
+            if (this._current > 0) {
+                --this._current;
+                // to prevent our idle handler from playing the next track
+                this._castState = "";
+                this._next();
+                return;
+            } else {
+                console.log("at start");
+            }
+        }
+        // to prevent our idle handler from playing the next track
+        this._castState = "";
+        this._next();
+    }
+
     updatePresence(presence) {
         if (!this._started) {
             console.log("presence updating, not started?");
@@ -381,5 +416,27 @@ module.exports = {
         }
         state.playing[json.uuid].stop();
         delete state.playing[json.uuid];
+    },
+    next: function(json, state) {
+        if (!("uuid" in json)) {
+            console.error("no uuid for play");
+            return;
+        }
+        if (!(json.uuid in state.playing)) {
+            console.error(`no play for uuid ${json.uuid}`);
+            return;
+        }
+        state.playing[json.uuid].next();
+    },
+    previous: function(json, state) {
+        if (!("uuid" in json)) {
+            console.error("no uuid for play");
+            return;
+        }
+        if (!(json.uuid in state.playing)) {
+            console.error(`no play for uuid ${json.uuid}`);
+            return;
+        }
+        state.playing[json.uuid].previous();
     }
 };
