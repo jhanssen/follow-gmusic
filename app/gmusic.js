@@ -157,14 +157,7 @@ class Play {
     }
 
     stop() {
-        if (this._cast && this._player) {
-            this._player.removeAllListeners("status");
-            this._player.stop();
-            this._player = undefined;
-            this._cast = undefined;
-            this._castState = "";
-            this._started = undefined;
-        }
+        this._cleanup();
     }
 
     updatePresence(presence) {
@@ -321,6 +314,11 @@ class Play {
                         this._player = player;
                         resolve();
                     });
+                    castClient.on("error", err => {
+                        // throw our client away
+                        console.log("cast client error", err.message || err);
+                        this._cleanup();
+                    });
                 }).catch(err => {
                     reject(err);
                 });
@@ -328,6 +326,20 @@ class Play {
                 reject(err);
             });
         });
+    }
+
+    _cleanup() {
+        if (this._player) {
+            this._player.removeAllListeners("status");
+            this._player.stop();
+            this._player = undefined;
+        }
+        if (this._cast) {
+            this._cast.removeAllListeners("error");
+            this._cast = undefined;
+            this._castState = "";
+        }
+        this._started = undefined;
     }
 }
 
